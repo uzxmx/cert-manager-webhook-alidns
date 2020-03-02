@@ -1,0 +1,14 @@
+services:
+  - docker
+
+stages:
+  - build
+
+jobs:
+  include:
+    - stage: build
+      script:
+        - set -e
+        - make docker-login
+        - DOCKER_REPO=$TRAVIS_REPO_SLUG DOCKER_TAG="$(echo $TRAVIS_TAG | sed -Ee 's/^v([0-9]+\.[0-9]+(\.[0-9]+)?)/\1/')" make docker-build
+        - DOCKER_REPO=$TRAVIS_REPO_SLUG DOCKER_TAG="$(echo $TRAVIS_TAG | sed -Ee 's/^v([0-9]+\.[0-9]+(\.[0-9]+)?)/\1/')" make docker-push
