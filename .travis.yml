@@ -5,12 +5,26 @@ services:
 
 stages:
   - build
+  - deploy
 
 jobs:
   include:
     - stage: build
       script:
         - set -e
+        - make clean
         - make docker-login
         - DOCKER_REPO=$TRAVIS_REPO_SLUG DOCKER_TAG="$(echo $TRAVIS_TAG | sed -Ee 's/^v([0-9]+\.[0-9]+(\.[0-9]+)?)/\1/')" make docker-build
         - DOCKER_REPO=$TRAVIS_REPO_SLUG DOCKER_TAG="$(echo $TRAVIS_TAG | sed -Ee 's/^v([0-9]+\.[0-9]+(\.[0-9]+)?)/\1/')" make docker-push
+    - stage: deploy
+      if: tag IS present
+      script: VERSION="$(echo $TRAVIS_TAG | sed -Ee 's/^v([0-9]+\.[0-9]+(\.[0-9]+)?)/\1/')" make dist
+      deploy:
+        provider: releases
+        api_key:
+          secure: "tRIUWvPIwuLQouA06bUgrG2plZKTOAsTMq0X+V/62+5jEiTvG6DbMRPSM52M128TDmUi6ueHktUElSSdDjwHB/KRZz3rWc9D1GPMKGtUDfrJz3dthUlxnghMQCHPmIA8MU5mVW6Vhr72pUh1O/KuKG9hNphNGXkHG9Y0Go2zEN0eOK/ioS4N5venE+WJdR21YQLmOwcpYhcSOXvDe16hAroKtjp9/JXa1vczB8Z3ubOvh3vEGZN51y/1FSP9GYSsiu230PTauRhf8AYMZZpevogjGo5ZZLntWzMBwqoh0qre9gILddJFh0FhjbT/wJ7XCJoXNh2BU1sF7Tl6oObEk4zDy98U5t3Zr9oYRU3VQozhaYtiHm8HF2iQ0pXOBjCvXdZHM6qHSOMMK27jXXvZgt1nmgkOEyvv+GzxRm4VHUNxOeFU+3KUYUmHs35B4Gass1KWD7pgKIFR04h3x1WdxxTRINcAoZ0ELZiIqt0ZihSX6rEK3jmcRd1wdoyJSXMYBPII7VdgDptqxAFEmfuQc3X/D4NDYvnjy6hmOsuekMSCfRgydn8tWZJeLKe3bXUHqYBaAiN/xjwnBGEbmG3/NxyN+PzXHNRzOtWyXwRHJtcduP/yLCwcZ9skONmkQo+gOvuhKNr07ZyBju4zVjkQab+cbdMzlrjg2d43WMl2p/A="
+        file_glob: true
+        file: dist/*.tgz
+        skip_cleanup: true
+        on:
+          tags: true
