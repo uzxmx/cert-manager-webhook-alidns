@@ -13,11 +13,13 @@ import (
 )
 
 func extractRR(fqdn, domain string) string {
-	name := util.UnFqdn(fqdn)
-	if idx := strings.Index(name, "."+domain); idx != -1 {
-		return name[:idx]
+	domain = util.UnFqdn(domain)
+	rr := util.UnFqdn(fqdn)
+	idx := strings.LastIndex(rr, domain)
+	if idx != -1 {
+		return util.UnFqdn(fqdn[:idx])
 	}
-	return name
+	return rr
 }
 
 func extractConfig(ch *v1alpha1.ChallengeRequest) (*AliDNSSolverConfig, error) {
